@@ -1,6 +1,7 @@
 import socket
 import base64
 import hashlib
+import sys
 import os
 from enum import Enum, auto
 
@@ -55,7 +56,7 @@ class RCPClient:
         
         return tamanho, checksum, conteudo_b64
 
-    def iniciar_sessao(self, caminho_arquivo, lang="c"):
+    def iniciar_sessao(self, caminho_arquivo, lang="c", flags=""):
         """Máquina de estados principal do cliente"""
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         
@@ -77,8 +78,14 @@ class RCPClient:
 
             print(f"[HANDSHAKING] Servidor aceitou: {resposta}")
             
-            # Estado: IDLE_SESSION (Sessão pronta)
+                        # Estado: IDLE_SESSION (Sessão pronta)
             self.state = ClientState.IDLE_SESSION
+            
+            if flags:
+                print(f"[IDLE_SESSION] Enviando configurações: flags={flags}")
+                cmd_opts = f"OPTS flags={flags}"
+                self.send_cmd(cmd_opts)
+            
             nome_arquivo = os.path.basename(caminho_arquivo)
             tamanho, checksum, corpo_b64 = self.preparar_arquivo(caminho_arquivo)
             
@@ -107,11 +114,14 @@ class RCPClient:
                 if linha == "COMPILING":
                     print("[COMPILING] Servidor está compilando o código...")
                     continue
-                
+
                 if linha.startswith("SUCCESS"):
                     print(f"[SUCCESS] Compilação concluída! Cabeçalho: {linha}")
                     self.state = ClientState.RECEIVING
-                    self._receber_resultado_base64("saida.exe")
+                    diretorio_origem = os.path.dirname(caminho_arquivo)
+                    nome_original = os.path.basename(caminho_arquivo)
+                    nome_exe = nome_original.replace(".c", ".exe")
+                    self._receber_resultado_base64(nome_exe, diretorio_origem)
                     
                 elif linha.startswith("FAILURE"):
                     print(f"[FAILURE] Erro de compilação! Cabeçalho: {linha}")
@@ -130,7 +140,7 @@ class RCPClient:
                 resposta = self.read_line()
                 if resposta == "BYE":
                     self.state = ClientState.DONE
-                    print("[DONE] Sessão encerrada de forma graciosa.")
+                    print("[DONE] Sessão encerrada.")
 
         except Exception as e:
             print(f"[ERROR] Ocorreu uma exceção: {e}")
@@ -138,7 +148,7 @@ class RCPClient:
         finally:
             self.sock.close()
 
-    def _receber_resultado_base64(self, nome_saida):
+    def _receber_resultado_base64(self, nome_saida, diretorio_destino):
         """Recebe o binário em Base64, decodifica e salva no disco"""
         b64_data = ""
         while True:
@@ -148,9 +158,11 @@ class RCPClient:
             b64_data += linha
             
         dados_binarios = base64.b64decode(b64_data)
-        with open(nome_saida, 'wb') as f:
+        # Junta o diretório original do arquivo com o nome do executável
+        caminho_completo = os.path.join(diretorio_destino, nome_saida)
+        with open(caminho_completo, 'wb') as f:
             f.write(dados_binarios)
-        print(f"[RECEIVING] Arquivo salvo com sucesso como '{nome_saida}'")
+        print(f"[RECEIVING] Arquivo salvo com sucesso como '{caminho_completo}'")
 
     def _receber_resultado_texto(self):
         """Recebe o log de erros em texto puro e imprime no terminal"""
@@ -166,8 +178,24 @@ class RCPClient:
 if __name__ == "__main__":
     cliente = RCPClient()
     
-    # Testando com o seu arquivo C
-    if os.path.exists("teste.c"):
-        cliente.iniciar_sessao("teste.c", lang="c")
+    if len(sys.argv) > 1:
+        arquivos_c = sys.argv[1:]
     else:
-        print("Arquivo 'teste.c' não encontrado no diretório.")
+        pasta_testes = os.path.join("..", "testes")
+        if os.path.isdir(pasta_testes):
+            arquivos_c = [
+                os.path.join(pasta_testes, nome)
+                for nome in os.listdir(pasta_testes)
+                if nome.lower().endswith(".c")
+            ]
+        else:
+            arquivos_c = []
+
+    if not arquivos_c:
+        print("Nenhum arquivo .c encontrado.")
+    else:
+        for caminho_teste in sorted(arquivos_c):
+            if os.path.exists(caminho_teste):
+                cliente.iniciar_sessao(caminho_teste, lang="c", flags="-O3")
+            else:
+                print(f"Arquivo '{caminho_teste}' não encontrado.")
