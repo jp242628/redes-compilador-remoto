@@ -258,6 +258,13 @@ if __name__ == "__main__":
         )
         sys.exit(1)
 
+    ip_servidor = input(
+        "Digite o IP do servidor: "
+    ).strip()
+
+    if not ip_servidor:
+        ip_servidor = "127.0.0.1"
+
     print("\nFlags disponíveis:")
     print("0 - Sem flags")
     print("1 - -Wall")
@@ -283,7 +290,7 @@ if __name__ == "__main__":
     else:
         flags_input = flags_map.get(opcao, "")
 
-    cliente = RCPClient()
+    cliente = RCPClient(host=ip_servidor)
 
     cliente.iniciar_sessao(
         caminho_arquivo,
