@@ -50,7 +50,6 @@ O **RemoteCC** é uma aplicação distribuída que permite a um cliente enviar u
 
 | Cenário | Descrição |
 |---|---|
-| Compilação cruzada | Compilar no servidor Linux enquanto o cliente usa Windows/macOS |
 | CI/CD simplificado | Validar compilação de um trecho de código sem configurar toolchain local |
 | Ambientes educacionais | Alunos enviam código para ser compilado e testado em um servidor centralizado |
 | Laboratórios embarcados | Compilar para arquiteturas específicas disponíveis apenas no servidor |
@@ -100,7 +99,7 @@ O RemoteCC utiliza **TCP** (_Transmission Control Protocol_) como protocolo de t
 
 | Requisito | Detalhe |
 |---|---|
-| Sistema operacional | Linux, macOS ou Windows |
+| Sistema operacional | Linux |
 | Python | ≥ 3.8 (ou runtime equivalente da linguagem de implementação) |
 | Conectividade | Acesso TCP à porta do servidor |
 | Arquivo-fonte | Arquivo `.c` ou `.cpp` válido no sistema de arquivos local |
