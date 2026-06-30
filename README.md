@@ -3,7 +3,23 @@
 > Aplicação distribuída cliente/servidor para envio, compilação e retorno de arquivos C/C++.
 
 ---
+## Informações do Projeto
 
+| | |
+|---|---|
+| **Matéria** | Redes de Computadores I |
+| **Curso** | Ciência da Computação |
+
+### Contribuidores
+
+| Nome |
+|---|
+| Guilherme Sampaio |
+| João Paulo |
+| Luis Felipe Malta |
+| Mateus Lisboa |
+
+---
 ## Sumário
 
 1. [Propósito da Aplicação](#1-propósito-da-aplicação)
